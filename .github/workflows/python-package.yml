@@ -1,5 +1,9 @@
 name: Tests
 
+env:
+  # The query tape to publish.  alpha's adds to main's, and runs on alpha use both.
+  TAPE: ${{ (github.ref == 'refs/heads/alpha' || github.base_ref == 'alpha') && 'dbtape-alpha.sqlite' || 'dbtape.sqlite' }}
+
 on:
   push:
     branches: [ '**' ]
@@ -46,7 +50,7 @@ jobs:
     # recently ran for five and a half.  Fail such a job in an hour instead.
     # Runs recording the query tape get four hours, since a first recording
     # (or stale_tables=all) fetches everything from the rate-limited devmirror.
-    timeout-minutes: ${{ github.repository == 'LMFDB/lmfdb' && github.ref == 'refs/heads/main' && matrix.server == 'devmirror' && 240 || 60 }}
+    timeout-minutes: ${{ github.repository == 'LMFDB/lmfdb' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha') && matrix.server == 'devmirror' && 240 || 60 }}
     strategy:
       # The devmirror shards share one database.  Bound concurrent jobs so required
       # functional CI does not become an uncontrolled database load test.
@@ -129,22 +133,35 @@ jobs:
       if: matrix.files != 'lint' && matrix.server == 'devmirror'
       shell: bash
       env:
-        RECORD: ${{ github.repository == 'LMFDB/lmfdb' && github.ref == 'refs/heads/main' }}
+        RECORD: ${{ github.repository == 'LMFDB/lmfdb' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha') }}
         STALE_TABLES: ${{ inputs.stale_tables }}
       run: |
-        url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz
-        code=$(curl -sSL --retry 3 -o dbtape.sqlite.gz -w '%{http_code}' "$url") || true
-        if [ "$code" = 200 ] && gunzip -f dbtape.sqlite.gz; then
-          echo "DBTAPE_FILE=$PWD/dbtape.sqlite" >> "$GITHUB_ENV"
-        else
-          rm -f dbtape.sqlite dbtape.sqlite.gz
+        wanted=dbtape.sqlite
+        if [ "$TAPE" != dbtape.sqlite ]; then wanted="dbtape.sqlite $TAPE"; fi
+        tapes=()
+        for tape in $wanted; do
+          url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/$tape.gz
+          code=$(curl -sSL --retry 3 -o "$tape.gz" -w '%{http_code}' "$url") || true
+          if [ "$code" = 200 ] && gunzip -f "$tape.gz"; then
+            tapes+=("$tape")
+            continue
+          fi
+          rm -f "$tape" "$tape.gz"
           # A shard recording without the tape picks its own seed, and the
           # shards' tapes then cannot be merged.  404 means there is no tape yet.
           if [ "$RECORD" = true ] && [ "$code" != 404 ]; then
-            echo "::error::Could not fetch the query tape (HTTP $code), so this shard cannot record"
+            echo "::error::Could not fetch $tape (HTTP $code), so this shard cannot record"
             exit 1
           fi
-          echo "::warning::Could not fetch the query tape, so every query goes to devmirror"
+          echo "::warning::Could not fetch $tape (HTTP $code)"
+        done
+        if [ ${#tapes[@]} -eq 2 ] && python3 conftest.py combine dbtape-both.sqlite "${tapes[@]}"; then
+          tapes=(dbtape-both.sqlite)
+        fi
+        if [ ${#tapes[@]} -gt 0 ]; then
+          echo "DBTAPE_FILE=$PWD/${tapes[0]}" >> "$GITHUB_ENV"
+        else
+          echo "::warning::Without a query tape, every query goes to devmirror"
         fi
         if [ "$RECORD" = true ]; then
           echo "DBTAPE_MODE=record" >> "$GITHUB_ENV"
@@ -208,12 +225,12 @@ jobs:
     needs: [matrix_prep, test]
     # Test failures do not stop publication: the tape records what the data is,
     # and a failure caused by the data should show up in replays too.
-    if: always() && needs.matrix_prep.result == 'success' && github.repository == 'LMFDB/lmfdb' && github.ref == 'refs/heads/main'
+    if: always() && needs.matrix_prep.result == 'success' && github.repository == 'LMFDB/lmfdb' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     concurrency:
-      group: dbtape-publish
+      group: dbtape-publish-${{ github.ref_name }}
     steps:
     - uses: actions/checkout@v4
 
@@ -235,18 +252,18 @@ jobs:
           echo "::warning::Only $found of $expected shards recorded a tape, so the published one is unchanged"
           exit 0
         fi
-        python3 conftest.py merge dbtape.sqlite tapes/*/*.sqlite
-        { echo '```'; python3 conftest.py describe dbtape.sqlite; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        python3 conftest.py merge "$TAPE" tapes/*/*.sqlite
+        { echo '```'; python3 conftest.py describe "$TAPE"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
         # Runs overlap, and this one's results for queries it did not refetch
         # come from the tape it started with.  If another run has published
         # since, keep that tape rather than going back to older results.
         meta() { python3 conftest.py describe "$1" | sed -n "s/^$2: //p"; }
-        url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz
+        url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/$TAPE.gz
         code=$(curl -sSL --retry 3 -o published.sqlite.gz -w '%{http_code}' "$url") || true
         if [ "$code" = 200 ]; then
           gunzip -f published.sqlite.gz
-          if [ "$(meta published.sqlite format)" = "$(meta dbtape.sqlite format)" ] &&
-             [ "$(meta published.sqlite created)" != "$(meta dbtape.sqlite base)" ]; then
+          if [ "$(meta published.sqlite format)" = "$(meta "$TAPE" format)" ] &&
+             [ "$(meta published.sqlite created)" != "$(meta "$TAPE" base)" ]; then
             echo "::warning::Another run published a tape while this one was recording, so that one is kept"
             exit 0
           fi
@@ -254,9 +271,9 @@ jobs:
           echo "::error::Could not fetch the published tape (HTTP $code) to check it is still the one this run started from"
           exit 1
         fi
-        gzip -9 dbtape.sqlite
+        gzip -9 "$TAPE"
         if ! gh release view ci-dbtape > /dev/null 2>&1; then
           gh release create ci-dbtape --prerelease --latest=false --title "CI query tape" \
-            --notes "Database results replayed by the Tests workflow, replaced on every run on main. See \"Query tape\" in Development.md."
+            --notes "Database results replayed by the Tests workflow, replaced on every run on main or alpha. See \"Query tape\" in Development.md."
         fi
-        gh release upload ci-dbtape dbtape.sqlite.gz --clobber
+        gh release upload ci-dbtape "$TAPE.gz" --clobber

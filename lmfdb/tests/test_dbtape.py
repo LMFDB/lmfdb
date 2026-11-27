@@ -122,18 +122,20 @@ class DbTapeTest(unittest.TestCase):
     def path(self, name):
         return os.path.join(self.dir, name)
 
-    def make_tape(self, entries, meta={}):
+    def make_tape(self, entries, meta={}, name="made.sqlite", seed="5"):
         """
         A tape holding a dummy result for each (name, tables, recorded).
         """
-        path = self.path("made.sqlite")
+        path = self.path(name)
+        if os.path.exists(path):
+            os.remove(path)
         conn = sqlite3.connect(path)
         dbtape.create_tables(conn)
-        conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', '5')", (dbtape.FORMAT,))
+        conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)", (dbtape.FORMAT, seed))
         conn.executemany("INSERT INTO meta VALUES (?, ?)", meta.items())
-        for name, tables, recorded in entries:
+        for entry, tables, recorded in entries:
             conn.execute("INSERT INTO tape VALUES (?, ?, ?, 'q', ?)",
-                         (key(name), recorded.isoformat(timespec="seconds"), tables, dbtape._pack(1, [(1,)])))
+                         (key(entry), recorded.isoformat(timespec="seconds"), tables, dbtape._pack(1, [(1,)])))
         conn.commit()
         conn.close()
         return path
@@ -507,6 +509,65 @@ class DbTapeTest(unittest.TestCase):
         dbtape.merge(self.path("next.sqlite"), [first, second])
         self.assertEqual(meta(self.path("next.sqlite"))["base"], "mixed")
 
+    def test_combine(self):
+        # Runs on alpha start from main's tape and alpha's together.
+        now = dbtape._utcnow().replace(microsecond=0)
+        recorded = {"main": now - DAY, "alpha": now - 2 * DAY}
+        names = ["both", "knowl", "catalog"]
+        tables = {"both": "nf_fields", "knowl": "kwl_knowls", "catalog": "meta_tables", "own": "smf_newforms"}
+
+        def combined(main={}, alpha={}, when=recorded):
+            metas = {"main": dict({"fingerprint kwl_knowls": "1 10", "fingerprint catalog": "5 50",
+                                   "created": when["main"].isoformat()}, **main),
+                     "alpha": dict({"fingerprint kwl_knowls": "1 10", "fingerprint catalog": "5 50",
+                                    "created": when["alpha"].isoformat()}, **alpha)}
+            paths = [self.make_tape([(n, tables[n], when[t]) for n in names]
+                                    + [(t + n, tables[n], when[t]) for n in tables],
+                                    metas[t], t + ".sqlite", seed={"main": "5", "alpha": "6"}[t])
+                     for t in ("main", "alpha")]
+            out = self.path("combined.sqlite")
+            dbtape.combine(out, *paths)
+            conn = sqlite3.connect(out)
+            return (dict(conn.execute("SELECT k, v FROM meta")),
+                    {k: datetime.datetime.fromisoformat(r) for k, r in conn.execute("SELECT k, r FROM tape")})
+
+        def has(rows, *entries):
+            return [key(e) in rows for e in entries]
+        meta, rows = combined()
+        # The newest recording wins, and each tape answers what only it has,
+        self.assertEqual(rows[key("both")], recorded["main"])
+        self.assertEqual(has(rows, "mainown", "alphaown", "alphaboth", "alphaknowl"), [True] * 4)
+        # except that the catalog results all come from the newer tape.
+        self.assertEqual(has(rows, "maincatalog", "alphacatalog"), [True, False])
+        # A recording made from it replaces alpha's tape.
+        self.assertEqual((meta["seed"], meta["created"]), ("5", recorded["alpha"].isoformat()))
+        meta, rows = combined(when={"main": now - 2 * DAY, "alpha": now - DAY})
+        self.assertEqual(rows[key("both")], now - DAY)
+        self.assertEqual(has(rows, "maincatalog", "alphacatalog", "mainknowl"), [False, True, True])
+        self.assertEqual((meta["seed"], meta["created"]), ("5", (now - DAY).isoformat()))
+        # Knowls edited between the recordings: the older tape's are not current.
+        meta, rows = combined(alpha={"fingerprint kwl_knowls": "1 9"})
+        self.assertEqual(meta["fingerprint kwl_knowls"], "1 10")
+        self.assertEqual(has(rows, "mainknowl", "alphaknowl", "alphaown"), [True, False, True])
+        tape = dbtape.Tape("replay", src=self.path("combined.sqlite"))
+        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (1, 10), "catalog": (5, 50)}))
+        self.assertEqual([tape.lookup(key(n)) for n in ("alphaknowl", "alphacatalog")], ["miss", "miss"])
+        self.assertNotIn("stale", [tape.lookup(key(n)) for n in ("mainknowl", "maincatalog", "alphaown", "both")])
+        # A tape of another format is left out.
+        combined()
+        out, main, alpha = [self.path(n + ".sqlite") for n in ("combined", "main", "alpha")]
+        with sqlite3.connect(alpha) as conn:
+            conn.execute("UPDATE meta SET v = '1' WHERE k = 'format'")
+        dbtape.combine(out, main, alpha)
+        conn = sqlite3.connect(out)
+        self.assertEqual(dict(conn.execute("SELECT k, v FROM meta"))["created"], recorded["main"].isoformat())
+        rows = [k for k, in conn.execute("SELECT k FROM tape")]
+        self.assertEqual(has(rows, "mainown", "alphaown"), [True, False])
+        with sqlite3.connect(main) as conn:
+            conn.execute("UPDATE meta SET v = '1' WHERE k = 'format'")
+        with self.assertRaises(ValueError):
+            dbtape.combine(out, main, alpha)
+
     def test_command_line(self):
         tapes = [self.write_recordings("in%s.sqlite" % i, [([("a",)], "2026-01-01T0%s:00:00" % i)]) for i in range(2)]
         out = self.path("merged.sqlite")
@@ -520,4 +581,7 @@ class DbTapeTest(unittest.TestCase):
         self.assertIn("1 results, 0.0 MB compressed, recorded 2026-01-01T01:00:00 to 2026-01-01T01:00:00",
                       described.stdout)
         self.assertIn("nf_fields", described.stdout)
+        created = [self.make_tape([(n, "nf_fields", dbtape._utcnow())], {"created": n}, n + ".sqlite") for n in "ab"]
+        self.assertEqual(run("combine", self.path("both.sqlite"), *created).returncode, 0)
+        self.assertIn("2 results", run("describe", self.path("both.sqlite")).stdout)
         self.assertIn("usage", run("describe").stderr)
