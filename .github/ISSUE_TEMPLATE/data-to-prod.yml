@@ -1,0 +1,51 @@
+name: Move data to production
+description: Request that tables on beta be copied to www.lmfdb.org (and archived on Zenodo)
+title: "[Data to prod] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        When these tables are copied to production, each one gets a new version of its record on [Zenodo](https://zenodo.org/communities/lmfdb), and the LMFDB data version increases (see https://www.lmfdb.org/version).  The description and version bump below go into those Zenodo records.
+  - type: textarea
+    id: tables
+    attributes:
+      label: Tables
+      description: The search tables to copy from devmirror to production, one per line.
+      placeholder: |
+        mf_newforms
+        mf_hecke_traces
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the change
+      description: A short description of what was added, corrected or removed.  It is published on the new Zenodo version of each table, so write it for someone citing the data.
+      placeholder: Added newforms of weight 1 and level up to 4000.
+    validations:
+      required: true
+  - type: dropdown
+    id: bump
+    attributes:
+      label: Version update
+      description: |
+        Minor: new rows or columns, or corrections, without changing existing labels or the meaning of existing columns.
+        Major: changed labels, removed rows or columns, or a change in the meaning or format of existing columns.
+      options:
+        - minor
+        - major
+        - different for different tables (explain below)
+    validations:
+      required: true
+  - type: textarea
+    id: per_table
+    attributes:
+      label: Per-table details (optional)
+      description: "If the version update or description differs between tables, give it here as `table: major/minor, description`."
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I have checked the pages that use this data on beta.lmfdb.org.
+          required: true

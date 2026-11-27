@@ -23,7 +23,32 @@ from sage.all import cached_function
 from .logger import critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.2.1"
+from lmfdb.version import LEGACY_VERSION
+
+# Once the versioning system is activated (version_history table populated),
+# the footer shows the full version {major}.{data}-{code} -- see
+# lmfdb/version.py and /version; until then this legacy string is displayed.
+# Beta has no version table: its data and code are ahead of any release.
+LMFDB_VERSION = "LMFDB beta" if os.getenv("BETA") == "1" else LEGACY_VERSION
+
+_version_cache = {"time": 0.0, "value": LMFDB_VERSION}
+
+
+def lmfdb_version_string():
+    """The version displayed in the footer, refreshed at most every 5 minutes."""
+    if time.time() - _version_cache["time"] > 300:
+        # stamp first so a failing database is not retried on every request
+        _version_cache["time"] = time.time()
+        try:
+            from . import db
+            from .zenodo.state import current_version_string
+            v = current_version_string(db)
+        except Exception:
+            # a dropped connection keeps the last version shown; retry in 30 s
+            _version_cache["time"] -= 270
+        else:
+            _version_cache["value"] = "LMFDB %s" % v if v else LMFDB_VERSION
+    return _version_cache["value"]
 
 ############################
 #         Main app         #
@@ -135,7 +160,7 @@ def ctx_proc_userdata():
     vars['title'] = r'LMFDB'
 
     # LMFDB version number displayed in footer
-    vars['version'] = LMFDB_VERSION
+    vars['version'] = lmfdb_version_string()
 
     # meta_description appears in the meta tag "description"
     vars['meta_description'] = r'Welcome to the LMFDB, the database of L-functions, modular forms, and related objects. These pages are intended to be a modern handbook including tables, formulas, links, and references for L-functions and their underlying objects.'
@@ -450,6 +475,66 @@ def acknowledgment():
 def workshops():
     bread = [("Acknowledgments", url_for('.acknowledgment')), ("Activities", '')]
     return render_template("workshops.html", title="LMFDB Activities", contribs=contribs, bread=bread)
+
+
+@app.route("/version")
+def version_page():
+    from . import db
+    from .zenodo import state as version_state
+    from .zenodo.versioning import format_time, history_events, parse_version
+    from lmfdb.utils import flash_error
+    bread = [("Version", '')]
+    try:
+        events = history_events(version_state.history(db))
+    except Exception:
+        events = []
+    current = events[0]["version"] if events else None
+    resolved = None
+    query = request.args.get("v", "").strip()
+    if events:
+        try:
+            major, data_seq, code_seq = parse_version(query or current)
+        except ValueError:
+            flash_error("%s is not a valid LMFDB version, which has the form "
+                        "2.3-5 or 2.3", query)
+            return redirect(url_for("version_page"))
+        try:
+            resolved = version_state.resolve_version(db, major, data_seq, code_seq)
+        except ValueError:
+            flash_error("LMFDB version %s does not exist", query)
+            return redirect(url_for("version_page"))
+    return render_template("version.html", title="LMFDB version history",
+                           bread=bread, events=events, resolved=resolved,
+                           query=query, current=current,
+                           format_time=format_time)
+
+
+@app.route("/api/version/<v>")
+def version_api(v):
+    """
+    Machine-readable version resolution: /api/version/2.3-5 returns the
+    frontend git commit and the Zenodo record version of every table at that
+    LMFDB version; /api/version/current resolves the current version.
+    """
+    from flask import jsonify
+    from . import db
+    from .zenodo import state as version_state
+    from .zenodo.versioning import parse_version
+    try:
+        if v == "current":
+            cur = version_state.latest_versions(db)
+            if cur is None:
+                return jsonify({"error": "versioning not yet activated"}), 404
+            major, data_seq, code_seq = (cur["major"], cur["data_seq"],
+                                         cur["code_seq"])
+        else:
+            major, data_seq, code_seq = parse_version(v)
+        resolved = version_state.resolve_version(db, major, data_seq, code_seq)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 404
+    except Exception:
+        return jsonify({"error": "version history unavailable"}), 503
+    return jsonify(resolved)
 
 
 @app.route("/lucant")
