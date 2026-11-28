@@ -1751,7 +1751,10 @@ class NFBound(ColTest):
 
         # nSGp[n][k] is a list of pairs (M, Gs) so that we have completeness in degree n for number fields with Galois group nTt for t in Gs and unramified outside a set S of size k all of whose primes are less than M
         self._nSGp = {
-            5: {2: [(200, tup(1,4))]},
+            5: {2: [(200, (1,2,3))],
+                3: [100, (1,2,3)],
+                4: [12, (1,2,3)]},
+                5: [12, (1,2,3)]},
             6: {1: [(5000, tup(1,15))],
                 2: [(100, (12,14))],
                 3: [(12, (12,14)), (8, tup(1,15))],
